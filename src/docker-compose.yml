@@ -1,7 +1,7 @@
 services:
 
   mt5:
-    image: hudsonventura/mt5:1.1
+    image: hudsonventura/mt5:2.0
     build:
        context: ./
        dockerfile: ./Dockerfile
@@ -15,7 +15,7 @@ services:
 
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+      - ./mt5.ini:/home/headless/mt5.ini
     #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat # Uncomment if you ar using a non listed broker
       
     # Optional parameters:

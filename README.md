@@ -1,10 +1,10 @@
-# metatrader_in_container
-Run MT5 in a Docker container.  
+# MT5 Docker
+Run MetaTrader 5 (MT) in a Docker container.  
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/hudsonventura/mt5)
 
 
-This project runs the MT5 application inside a Docker container using Wine as a compatibility layer. The container typically consumes around 600MB of RAM (depending of broker). It's possible to run multiple containers simultaneously, each one with a separate MT5 account connected to differents brokers.  
+This project runs the MT5 application inside a Docker container using Wine as a compatibility layer. The container typically consumes around 500MB of RAM (depending of broker). It's possible to run multiple containers simultaneously, each one with a separate MT5 account connected to differents brokers.  
 An optional watchdog ensures that if MT5 crashes, the container exits as well, allowing Docker to automatically restart it and maintain uptime.
 
 
@@ -21,7 +21,7 @@ Create a file `docker-compose.yml` with this content:
 services:
 
   mt5:
-    image: hudsonventura/mt5:1.1
+    image: hudsonventura/mt5:2.0
 
     ports:
       - "5901:5901" #VNC
@@ -90,6 +90,8 @@ Whole docs in [https://www.metatrader5.com/en/terminal/help/start_advanced/start
 
 
 # Build
+If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
+<br />
 Edit the file `src/start.sh` and comment the line `exit 1`.  
 Build with `docker compose up --build`. Wait a while.  
 When finished, go to `http://localhost:6901/vnc.html`and put your VNC password. You are going to see the Wine Mono Installer. Continue the install. May take a while downloading Mono.  
@@ -107,16 +109,12 @@ Maybe you want see [After install](#after-install) before use container or creat
 ## Versions
 Which software can be found inside the container, and what are their versions?  
  - Ubuntu: 24.04.2  
- - Xfce: 4.18.3  
+ - Openbox: 3.6.1 (graphical interface)
  - Wine: 10.0  
- - MT5: 5.00 build 5147 (auto update)
- - noVNC 1.6.0  
- - TigerVNC 1.15.0  
+ - MT5: 5.00 build 5488 (auto update)
+ - noVNC 1.4.0  
  - Python 3.12.3  
 
 
 
 
-
-# Credits / Thanks for:
-Acetto: https://github.com/accetto/
