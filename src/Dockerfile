@@ -1,28 +1,69 @@
-FROM accetto/ubuntu-vnc-xfce-g3:24.04 as stage-ubuntu 
-USER root
+FROM ubuntu:24.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 
+# Update and install core dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg2 \
+    ca-certificates \
+    software-properties-common \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
 
-
-
-# Copyright 2022, MetaQuotes Ltd.
-# IT WAS GOT FROM: https://www.metatrader5.com/en/terminal/help/start_advanced/install_linux.
-# Go there to update
-
-
-RUN wget "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" && \
-    wget "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/c1336fd6-a2eb-4669-9b03-949fc70ace0e/MicrosoftEdgeWebview2Setup.exe" && \
+# Add WineHQ repository
+RUN dpkg --add-architecture i386 && \
+    mkdir -pm755 /etc/apt/keyrings && \
+    wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
-    dpkg --add-architecture i386 && mkdir -pm755 /etc/apt/keyrings && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
-    apt update &&apt install -y --install-recommends winehq-stable && \
-    WINEPREFIX=~/.mt5 winecfg -v=win10
+    apt-get update
 
+# Install Openbox, VNC, noVNC, and Wine
+RUN apt-get install -y --install-recommends \
+    openbox \
+    obconf \
+    tint2 \
+    tigervnc-standalone-server \
+    websockify \
+    python3 \
+    python3-numpy \
+    winehq-stable \
+    x11-apps \
+    net-tools \
+    dbus-x11 \
+    xfonts-base \
+    xauth \
+    pulseaudio \
+    xterm \
+    git \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup user first
+RUN useradd -m -s /bin/bash headless && \
+    echo "headless ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Clone noVNC and websockify at stable versions
+RUN git clone --branch v1.4.0 --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
+    git clone --branch v0.11.0 --depth 1 https://github.com/novnc/websockify.git /opt/noVNC/utils/websockify && \
+    chown -R headless:headless /opt/noVNC
+
+# Setup directories
+RUN mkdir -p /home/headless/.vnc && \
+    mkdir -p /home/headless/.config/openbox && \
+    chown -R headless:headless /home/headless
+
+# Copy configuration files
+COPY index.html /opt/noVNC/index.html
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN chmod +x /start.sh && \
+    chown headless:headless /opt/noVNC/index.html
 
+USER headless
+WORKDIR /home/headless
 
-#Run manually inside the container
-# wine MicrosoftEdgeWebview2Setup.exe /silent /install && wine mt5setup.exe
-# Add servers: Search by the brokers in account creation.
+# Expose VNC and noVNC ports
+EXPOSE 5901
+EXPOSE 6901
 
-
+CMD ["/bin/bash", "/start.sh"]
