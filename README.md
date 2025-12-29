@@ -30,7 +30,7 @@ services:
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
 
-    # Uncomment if you ar using a .ini file to connect with your broker automatically, see section `After Install`
+    # Uncomment if you ar using a .ini file to connect with your broker automatically, see section `.ini file`
     #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
 
     # Uncomment if you ar using a non listed broker, see section `After Install`
@@ -64,8 +64,28 @@ Open your favorite VNC client app and use this address:
 ```
 localhost:5901
 ```
+That's it!
 
-### After install
+
+
+# Build
+If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
+<br />
+Build with `docker compose up --build`. Wait a while.  
+When finished, go to `http://localhost:6901/vnc.html`and put your VNC password.
+
+If the MT5 installer doesn't start by it self, goto `/home/headless` (or just open the Home shotcut on XFCE desktop). Execute `mt5setup.exe` (double click).  
+![MT5Installer1.png](assets/MT5Installer1.png)
+
+A few seconds after, the MT5 installer will start. 
+
+![MT5Installer2.png](assets/MT5Installer2.png)
+
+
+The container may restart after the instalation.  
+
+
+# After install
 The MT5 has a strange limitation: you cannot connect to an account unless you have searched for the server first. If you are using the DockerHub image, I have already searched for many servers, but not all of them. So, you may need to access MT5 via VNC, check if your server is listed, and if not, search for it manually.
 
 ![SearchBroker1](assets/SearchBroker1.png)
@@ -90,24 +110,7 @@ See on `srv/mt5.ini` another things you can use.
 Whole docs in [https://www.metatrader5.com/en/terminal/help/start_advanced/start](https://www.metatrader5.com/en/terminal/help/start_advanced/start)  
 
 
-# Build
-If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
-<br />
-Build with `docker compose up --build`. Wait a while.  
-When finished, go to `http://localhost:6901/vnc.html`and put your VNC password.
-
-If the MT5 installer doesn't start by it self, goto `/home/headless` (or just open the Home shotcut on XFCE desktop). Execute `mt5setup.exe` (double click).  
-![MT5Installer1.png](assets/MT5Installer1.png)
-
-A few seconds after, the MT5 installer will start. 
-
-![MT5Installer2.png](assets/MT5Installer2.png)
-
-
-The container may restart after the instalation.  
-
-
-## Technology Stack
+# Technology Stack
 
 This project leverages a combination of technologies to run MT5 in a containerized environment with remote access capabilities. See the apps layers:
 
@@ -120,3 +123,11 @@ This project leverages a combination of technologies to run MT5 in a containeriz
 - **TigerVNC** - VNC server for remote desktop access (port 5901)
 - **noVNC 1.4.0** - Browser-based VNC client enabling access via web browser (port 6901)
 - **MetaTrader 5** - Trading platform with auto-update capability
+
+
+# Release Notes
+
+### 2.0
+ - Change from accetto build to manually created ubuntu + Openbox + nVNC.  
+ - From arround 600MB to 500MB of RAM consumption.  
+ - Fixed bug where MT5 was not responding a mouse click after some seconds working.
