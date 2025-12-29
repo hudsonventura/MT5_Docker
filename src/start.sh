@@ -63,6 +63,8 @@ WINE_DRIVE_C="$HOME/.wine/drive_c"
 MT5_DIR="$WINE_DRIVE_C/Program Files/MetaTrader 5"
 MT5_EXE="$MT5_DIR/terminal64.exe"
 
+echo "Wait for instalation ..."
+
 # Download and Install MT5 if not present
 if [ ! -f "$MT5_EXE" ]; then
     echo "MetaTrader 5 not found. Downloading and installing..."
@@ -70,11 +72,27 @@ if [ ! -f "$MT5_EXE" ]; then
     
     # Run installer
     echo "Installer started. Please connect via noVNC (port 6901) or VNC (port 5901) to complete installation."
+
+    # Display connection information
+    echo ""
+    echo ""
+    echo "Navigate to this URL:"
+    echo ""
+    echo "    http://$(hostname):6901/vnc.html"
+    echo "    OR "
+    echo "    http://localhost:6901/vnc.html and type '"${VNC_PW:-password}"' as password"
+    echo "    OR "
+    echo "    http://localhost:6901/vnc.html?password=""${VNC_PW:-password}"
+    echo ""
+    echo "Press Ctrl-C to exit"
+    echo ""
+    echo ""
+
     wine "$MT5_INSTALLER" &
     
     # Wait for the installer to finish or for the file to appear
     while [ ! -f "$MT5_EXE" ]; do
-        sleep 5
+        sleep 10
     done
     echo "MetaTrader 5 installed successfully."
 fi
@@ -91,8 +109,27 @@ echo "Starting MetaTrader 5..."
 wine "$MT5_EXE" /config:"C:\Program Files\MetaTrader 5\mt5.ini" &
 MT5_PID=$!
 
-# Monitor MT5 process
-while kill -0 $MT5_PID 2>/dev/null; do
+
+
+# Monitor MT5 and installer processes
+while true; do
+    # Check if MT5 terminal is running
+    MT5_RUNNING=false
+    if kill -0 $MT5_PID 2>/dev/null; then
+        MT5_RUNNING=true
+    fi
+    
+    # Check if MT5 installer is running
+    INSTALLER_RUNNING=false
+    if pgrep -f "mt5setup.exe" > /dev/null 2>&1; then
+        INSTALLER_RUNNING=true
+    fi
+    
+    # If neither MT5 nor the installer is running, exit
+    if [ "$MT5_RUNNING" = false ] && [ "$INSTALLER_RUNNING" = false ]; then
+        break
+    fi
+    
     sleep 10
 done
 

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MT5 VNC Console</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        #screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        #status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            font-family: monospace;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status">Connecting...</div>
+    <div id="screen"></div>
+
+    <script type="module">
+        import RFB from './core/rfb.js';
+
+        const host = window.location.hostname;
+        const port = window.location.port || 6901;
+        const path = 'websockify';
+        const url = 'ws://' + host + ':' + port + '/' + path;
+
+        const rfb = new RFB(document.getElementById('screen'), url, {
+            credentials: { password: '' }
+        });
+
+        rfb.scaleViewport = true;
+        rfb.resizeSession = true;
+
+        rfb.addEventListener("connect", () => {
+            document.getElementById('status').textContent = 'Connected';
+            setTimeout(() => {
+                document.getElementById('status').style.display = 'none';
+            }, 2000);
+        });
+
+        rfb.addEventListener("disconnect", (e) => {
+            document.getElementById('status').textContent = 'Disconnected: ' + e.detail.clean;
+            document.getElementById('status').style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>

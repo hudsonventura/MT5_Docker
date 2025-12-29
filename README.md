@@ -1,5 +1,5 @@
 # MT5 Docker
-Run MetaTrader 5 (MT) in a Docker container.  
+Run MetaTrader 5 (MT5) in a Docker container.  
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/hudsonventura/mt5)
 
@@ -8,10 +8,7 @@ This project runs the MT5 application inside a Docker container using Wine as a 
 An optional watchdog ensures that if MT5 crashes, the container exits as well, allowing Docker to automatically restart it and maintain uptime.
 
 
-
-
-
-![Descrição opcional](assets/mt5_demo.gif)
+![Main GIF](assets/mt5_demo.gif)
 
 
 
@@ -32,13 +29,17 @@ services:
 
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
-    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat # Uncomment if you ar using a non listed broker, see section `After Install`
+
+    # Uncomment if you ar using a .ini file to connect with your broker automatically, see section `After Install`
+    #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+
+    # Uncomment if you ar using a non listed broker, see section `After Install`
+    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       
     # Optional parameters:
     command: "/start.sh"       # If enabled, the container will shut down when MT5 is closed
     restart: always            # Automatically restarts the container if it stops
-    mem_limit: 1536m           # Best practice. The container typically uses around 600MB
+    mem_limit: 1024m           # Best practice. The container typically uses around 500MB
 ```
 
 So:
@@ -92,29 +93,30 @@ Whole docs in [https://www.metatrader5.com/en/terminal/help/start_advanced/start
 # Build
 If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
 <br />
-Edit the file `src/start.sh` and comment the line `exit 1`.  
 Build with `docker compose up --build`. Wait a while.  
-When finished, go to `http://localhost:6901/vnc.html`and put your VNC password. You are going to see the Wine Mono Installer. Continue the install. May take a while downloading Mono.  
-![MonoInstaller.png](assets/MonoInstaller.png)
+When finished, go to `http://localhost:6901/vnc.html`and put your VNC password.
 
 If the MT5 installer doesn't start by it self, goto `/home/headless` (or just open the Home shotcut on XFCE desktop). Execute `mt5setup.exe` (double click).  
-![MT5Installer.png](assets/MT5Installer.png)
+![MT5Installer1.png](assets/MT5Installer1.png)
+
+A few seconds after, the MT5 installer will start. 
+
+![MT5Installer2.png](assets/MT5Installer2.png)
 
 
-Finally, edit the `src/start.sh` and uncomment the line `exit 1`.  
-Ctrl+C to stop container. Now you are ready to use the container or tag and create a image to upload to DockerHub.
-Maybe you want see [After install](#after-install) before use container or create your image.  
+The container may restart after the instalation.  
 
 
-## Versions
-Which software can be found inside the container, and what are their versions?  
- - Ubuntu: 24.04.2  
- - Openbox: 3.6.1 (graphical interface)
- - Wine: 10.0  
- - MT5: 5.00 build 5488 (auto update)
- - noVNC 1.4.0  
- - Python 3.12.3  
+## Technology Stack
 
+This project leverages a combination of technologies to run MT5 in a containerized environment with remote access capabilities. See the apps layers:
 
-
-
+- **Ubuntu 24.04.2** - Base Linux distribution providing the foundation for the container
+- **Wine 10.0** - Windows compatibility layer that allows running Windows applications (MT5) on Linux
+- **Openbox 3.6.1** - Lightweight window manager providing the desktop environment inside the container
+- **obconf** - Configuration tool for Openbox
+- **tint2** - Panel/taskbar for the Openbox desktop
+- **X11** - Display server protocol for rendering graphical applications
+- **TigerVNC** - VNC server for remote desktop access (port 5901)
+- **noVNC 1.4.0** - Browser-based VNC client enabling access via web browser (port 6901)
+- **MetaTrader 5** - Trading platform with auto-update capability

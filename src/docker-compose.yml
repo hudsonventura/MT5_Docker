@@ -15,11 +15,15 @@ services:
 
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
-      - ./mt5.ini:/home/headless/mt5.ini
-    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat # Uncomment if you ar using a non listed broker
+
+    # Uncomment if you ar using a .ini file to connect with your broker automatically, see section `After Install`
+    #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+
+    # Uncomment if you ar using a non listed broker, see section `After Install`
+    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       
     # Optional parameters:
     command: "/start.sh"       # If enabled, the container will shut down when MT5 is closed
     restart: always            # Automatically restarts the container if it stops
-    mem_limit: 1536m           # Best practice. The container typically uses around 600MB
+    mem_limit: 1024m           # Best practice. The container typically uses around 600MB
 
