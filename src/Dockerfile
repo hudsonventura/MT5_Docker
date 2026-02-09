@@ -5,21 +5,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update and install core dependencies
 RUN apt-get update && apt-get install -y \
     wget \
+    curl \
     gnupg2 \
     ca-certificates \
     software-properties-common \
     sudo \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
 
-# Add WineHQ repository
-RUN dpkg --add-architecture i386 && \
-    mkdir -pm755 /etc/apt/keyrings && \
-    wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
-    wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
-    apt-get update
+
+    
 
 # Install Openbox, VNC, noVNC, and Wine
-RUN apt-get install -y --install-recommends \
+RUN apt-get update && apt-get install -y --install-recommends \
     openbox \
     obconf \
     tint2 \
@@ -27,7 +24,6 @@ RUN apt-get install -y --install-recommends \
     websockify \
     python3 \
     python3-numpy \
-    winehq-stable \
     x11-apps \
     net-tools \
     dbus-x11 \
@@ -58,6 +54,14 @@ COPY index.html /opt/noVNC/index.html
 COPY start.sh /start.sh
 RUN chmod +x /start.sh && \
     chown headless:headless /opt/noVNC/index.html
+
+
+# Add WineHQ repository
+RUN dpkg --add-architecture i386 && \
+    mkdir -pm755 /etc/apt/keyrings && \
+    wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
+    wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
+    apt-get update && apt-get install -y --install-recommends winehq-staging
 
 USER headless
 WORKDIR /home/headless

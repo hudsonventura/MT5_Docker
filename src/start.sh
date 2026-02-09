@@ -7,6 +7,13 @@ DISPLAY_NUM=1
 RESOLUTION="1280x800"
 DEPTH=24
 
+# Check and install Wine if not present
+if ! command -v wine &> /dev/null; then
+    echo "🚫Wine is not present"
+else
+    echo "✅ Wine is ok: $(wine --version)"
+fi
+
 # Set VNC Password
 mkdir -p ~/.vnc
 echo "${VNC_PW:-password}" | vncpasswd -f > ~/.vnc/passwd
@@ -103,6 +110,35 @@ if [ -f "/home/headless/mt5.ini" ]; then
     mkdir -p "$MT5_DIR"
     cp "/home/headless/mt5.ini" "$MT5_DIR/mt5.ini"
 fi
+
+
+
+# Function to download servers.dat
+download_servers_dat() {
+    echo "Downloading servers.dat..."
+    mkdir -p "$MT5_DIR/Config"
+    wget -q "https://github.com/hudsonventura/MT5_Docker/raw/refs/heads/main/servers.dat" -O "$SERVERS_DAT"
+    echo "servers.dat downloaded successfully."
+}
+
+# Check and download servers.dat if missing or smaller than 1MB
+SERVERS_DAT="$MT5_DIR/Config/servers.dat"
+MIN_SIZE=1048576  # 1MB in bytes
+
+if [ -f "$SERVERS_DAT" ]; then
+    FILE_SIZE=$(stat -c%s "$SERVERS_DAT" 2>/dev/null || echo 0)
+    if [ "$FILE_SIZE" -ge "$MIN_SIZE" ]; then
+        echo "servers.dat exists and is larger than 1MB. Skipping download."
+    else
+        echo "servers.dat exists but is smaller than 1MB."
+        download_servers_dat
+    fi
+else
+    echo "servers.dat not found."
+    download_servers_dat
+fi
+
+
 
 # Start MetaTrader 5
 echo "Starting MetaTrader 5..."
