@@ -49,11 +49,7 @@ RUN mkdir -p /home/headless/.vnc && \
     mkdir -p /home/headless/.config/openbox && \
     chown -R headless:headless /home/headless
 
-# Copy configuration files
-COPY index.html /opt/noVNC/index.html
-COPY start.sh /start.sh
-RUN chmod +x /start.sh && \
-    chown headless:headless /opt/noVNC/index.html
+
 
 
 # Add WineHQ repository
@@ -62,6 +58,13 @@ RUN dpkg --add-architecture i386 && \
     wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
     apt-get update && apt-get install -y --install-recommends winehq-staging
+
+
+# Copy configuration files
+COPY index.html /opt/noVNC/index.html
+COPY start.sh /start.sh
+RUN chmod +x /start.sh && \
+    chown headless:headless /opt/noVNC/index.html
 
 USER headless
 WORKDIR /home/headless

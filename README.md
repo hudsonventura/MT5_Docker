@@ -5,7 +5,7 @@ Run MetaTrader 5 (MT5) in a Docker container.
 
 
 This project runs the MT5 application inside a Docker container using Wine as a compatibility layer. The container typically consumes around 500MB of RAM (depending of broker). It's possible to run multiple containers simultaneously, each one with a separate MT5 account connected to differents brokers.  
-An optional watchdog ensures that if MT5 crashes, the container exits as well, allowing Docker to automatically restart it and maintain uptime.
+An watchdog ensures that if MT5 crashes, the container exits as well, allowing Docker to automatically restart it and maintain uptime.
 
 
 ![Main GIF](assets/mt5_demo.gif)
@@ -13,16 +13,24 @@ An optional watchdog ensures that if MT5 crashes, the container exits as well, a
 
 
 # Getting Stated
-Create a file `docker-compose.yml` with this content:  
+Create a file `docker-compose.yml` with content below or download using:
+``` bash
+wget https://raw.githubusercontent.com/hudsonventura/MT5_Docker/refs/heads/main/src/docker-compose.yml
+```
+
+
 ``` yaml
 services:
 
   mt5:
     image: hudsonventura/mt5:2.0
+    build:
+       context: ./
+       dockerfile: ./Dockerfile
 
     ports:
       - "5901:5901" #VNC
-      - "6901:6901" #noVNO via browser: http://localhost:6901/vnc.html
+      - "6901:6901" #noVNO (via browser: http://localhost:6901/vnc.html or http://localhost:6901/vnc.html?password=my_vnc_password)
 
     environment:
      - VNC_PW=my_vnc_password #VNC password. Change it as you like
@@ -30,16 +38,16 @@ services:
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
 
-    # Uncomment if you ar using a .ini file to connect with your broker automatically, see section `.ini file`
+    # Uncomment if you are using a .ini file to connect with your broker automatically, see section `After Install`
     #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
 
-    # Uncomment if you ar using a non listed broker, see section `After Install`
+    # Uncomment if you are using a non listed broker and you have a problema with it, see section `After Install`
     #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       
     # Optional parameters:
-    command: "/start.sh"       # If enabled, the container will shut down when MT5 is closed
+    command: "/start.sh"       # This will start the VNC, noVNC, and MT5. If MT5 is closed, the container will shut down
     restart: always            # Automatically restarts the container if it stops
-    mem_limit: 1024m           # Best practice. The container typically uses around 500MB
+    mem_limit: 1024m           # Best practice. The container typically uses around 600MB
 ```
 
 So:
@@ -66,6 +74,9 @@ localhost:5901
 ```
 That's it!
 
+---
+---
+---
 
 
 # Build
@@ -86,7 +97,8 @@ The container may restart after the instalation.
 
 
 # After install
-The MT5 has a strange limitation: you cannot connect to an account unless you have searched for the server first. If you are using the DockerHub image, I have already searched for many servers, but not all of them. So, you may need to access MT5 via VNC, check if your server is listed, and if not, search for it manually.
+The MT5 has a strange limitation: you cannot connect to an account unless you have searched for the server first. If you are using the DockerHub image, I have already searched for many servers, but not all of them. So, you may need to access MT5 via VNC, check if your server is listed, and if not, search for it manually.  
+There is and automation on files `start.sh`, but maybe your broker is not listed there. So go ahead in this section.  
 
 ![SearchBroker1](assets/SearchBroker1.png)
 
@@ -131,3 +143,5 @@ This project leverages a combination of technologies to run MT5 in a containeriz
  - Change from accetto build to manually created ubuntu + Openbox + nVNC.  
  - From arround 600MB to 500MB of RAM consumption.  
  - Fixed bug where MT5 was not responding a mouse click after some seconds working.
+
+ ### 2.1

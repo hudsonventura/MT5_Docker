@@ -16,8 +16,8 @@ services:
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
 
-    # Uncomment if you are using a .ini file to connect with your broker automatically, see section `After Install`
-    #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+    # Use a .ini file to connect with your broker automatically, see section `After Install`
+      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
 
     # Uncomment if you are using a non listed broker and you have a problema with it, see section `After Install`
     #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
