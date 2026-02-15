@@ -149,7 +149,7 @@ step_done "noVNC started (port $NOVNC_PORT)"
 # ============================================================
 # Step 5: Initialize Wine
 # ============================================================
-step_start "Initializing Wine environment. It must take a while"
+step_start "Initializing Wine environment. This may take some time. Please be patient."
 
 # Fix ownership of .wine directory (volume mounts may create it as root)
 if [ -d "$HOME/.wine" ]; then
