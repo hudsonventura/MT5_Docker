@@ -13,17 +13,18 @@ An watchdog ensures that if MT5 crashes, the container exits as well, allowing D
 
 
 # Getting Stated
-Create a file `docker-compose.yml` with content below or download using:
+Create a file `docker-compose.yml` downloading the file from GitHub:
 ``` bash
 wget https://raw.githubusercontent.com/hudsonventura/MT5_Docker/refs/heads/main/src/docker-compose.yml
 ```
 
+Or copy and paste the content below:
 
 ``` yaml
 services:
 
   mt5:
-    image: hudsonventura/mt5:2.0
+    image: hudsonventura/mt5:2.1
     build:
        context: ./
        dockerfile: ./Dockerfile
@@ -33,19 +34,22 @@ services:
       - "6901:6901" #noVNO (via browser: http://localhost:6901/vnc.html or http://localhost:6901/vnc.html?password=my_vnc_password)
 
     environment:
-     - VNC_PW=my_vnc_password #VNC password. Change it as you like
+
+      #VNC password. Change it as you like
+      - VNC_PW=my_vnc_password 
+      - SCREEN_RESOLUTION=800x600
 
     volumes:
-      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
+      # MQL5 folder (EAs, indicators, scripts, etc.)
+      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro
 
-    # Uncomment if you are using a .ini file to connect with your broker automatically, see section `After Install`
-    #  - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+      # Use a .ini file to connect with your broker automatically, see section `After Install`
+      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro
 
-    # Uncomment if you are using a non listed broker and you have a problema with it, see section `After Install`
-    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
+      # Uncomment this if you have trouble with login in your broker. See section `After Install` to get more information
+      #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       
     # Optional parameters:
-    command: "/start.sh"       # This will start the VNC, noVNC, and MT5. If MT5 is closed, the container will shut down
     restart: always            # Automatically restarts the container if it stops
     mem_limit: 1024m           # Best practice. The container typically uses around 600MB
 ```
@@ -68,43 +72,45 @@ Or try this link to skip typing the password:
 http://localhost:6901/vnc.html?password=my_vnc_password
 ```
 #### You can access the container via common VNC client app
-Open your favorite VNC client app and use this address:
-```
-localhost:5901
-```
-That's it!
+Open your favorite VNC client app and use this address `localhost:5901` and type your password set in `VNC_PW` environment variable.
 
----
----
----
-
-
-# Build
-If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
-<br />
-Build with `docker compose up --build`. Wait a while.  
-When finished, go to `http://localhost:6901/vnc.html`and put your VNC password.
-
-If the MT5 installer doesn't start by it self, goto `/home/headless` (or just open the Home shotcut on XFCE desktop). Execute `mt5setup.exe` (double click).  
+On first run, you will see the MT5 installer. Wait a moment.  
+It will configure the Wine for the first run, download and install the lastest version of MT5. It usually takes around 2 minutes.  
+The other executions will be faster.  
 ![MT5Installer1.png](assets/MT5Installer1.png)
-
-A few seconds after, the MT5 installer will start. 
-
 ![MT5Installer2.png](assets/MT5Installer2.png)
 
+After, you will see the MT5 running.  
+![MT5Running.png](assets/MT5Running.png)
 
-The container may restart after the instalation.  
+That's it!  
+
+---
+---
+---
+
+
+
+
+
+
+
+
+
+
 
 
 # After install
-The MT5 has a strange limitation: you cannot connect to an account unless you have searched for the server first. If you are using the DockerHub image, I have already searched for many servers, but not all of them. So, you may need to access MT5 via VNC, check if your server is listed, and if not, search for it manually.  
-There is and automation on files `start.sh`, but maybe your broker is not listed there. So go ahead in this section.  
+The MT5 has a strange limitation: you cannot connect to an account unless you have searched for the server first. If you are using the DockerHub image, I have already searched for many servers. It is store in `servers.dat` file. This fiel is downloaded from the internet, and I try to keep it updated.  
+However, you can use a broken not listed in that file. So, you may need to access MT5 via VNC, check if your server is listed, and if not, search for it manually.  
+In this case will have to the `volumes` on `docker-compose.yml` to persist your `servers.dat` file.  
+ 
 
 ![SearchBroker1](assets/SearchBroker1.png)
 
 ![SearchBroker2](assets/SearchBroker2.png)
 
-Use the volume `/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat` if you have another server that is not listed, and make sure to persist it on disk. If you don’t persist it, when you bring down Docker Compose, your broker server information will be lost, and your MT5 will not connect automatically. 
+
 
 
 ### .ini file
@@ -132,6 +138,18 @@ This project leverages a combination of technologies to run MT5 in a containeriz
 - **Access:**`noVNC 1.4.0` - Browser-based VNC client enabling access via web browser (port 6901)
 - **Compatibility Layer:**`Wine 10.0` - Windows compatibility layer that allows running Windows applications (MT5) on Linux
 - **App:**`MetaTrader 5` - Trading platform with auto-update capability
+
+
+
+
+# Build
+If you are building you own version, follow the steps below. If you using the version from DockerHub, skip this section.  
+<br />
+Build with `docker compose build`. Wait a while.  
+I will install Openbox, VNC, noVNC and Wine from the Ubuntu base image.  
+
+
+
 
 
 # Release Notes

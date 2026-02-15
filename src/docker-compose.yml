@@ -1,7 +1,7 @@
 services:
 
   mt5:
-    image: hudsonventura/mt5:2.0
+    image: hudsonventura/mt5:2.1
     build:
        context: ./
        dockerfile: ./Dockerfile
@@ -14,6 +14,7 @@ services:
 
       #VNC password. Change it as you like
       - VNC_PW=my_vnc_password 
+      - SCREEN_RESOLUTION=800x600
 
     volumes:
       # MQL5 folder (EAs, indicators, scripts, etc.)
