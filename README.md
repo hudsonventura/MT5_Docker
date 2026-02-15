@@ -126,15 +126,12 @@ Whole docs in [https://www.metatrader5.com/en/terminal/help/start_advanced/start
 
 This project leverages a combination of technologies to run MT5 in a containerized environment with remote access capabilities. See the apps layers:
 
-- **Ubuntu 24.04.2** - Base Linux distribution providing the foundation for the container
-- **Wine 10.0** - Windows compatibility layer that allows running Windows applications (MT5) on Linux
-- **Openbox 3.6.1** - Lightweight window manager providing the desktop environment inside the container
-- **obconf** - Configuration tool for Openbox
-- **tint2** - Panel/taskbar for the Openbox desktop
-- **X11** - Display server protocol for rendering graphical applications
-- **TigerVNC** - VNC server for remote desktop access (port 5901)
-- **noVNC 1.4.0** - Browser-based VNC client enabling access via web browser (port 6901)
-- **MetaTrader 5** - Trading platform with auto-update capability
+- **OS:** `Ubuntu 24.04.3 LTS` - Base Linux distribution providing the foundation for the container
+- **GUI:**`Openbox 3.6.1` - Lightweight window manager providing the desktop environment inside the container
+- **Access:**`TigerVNC` - VNC server for remote desktop access (port 5901)
+- **Access:**`noVNC 1.4.0` - Browser-based VNC client enabling access via web browser (port 6901)
+- **Compatibility Layer:**`Wine 10.0` - Windows compatibility layer that allows running Windows applications (MT5) on Linux
+- **App:**`MetaTrader 5` - Trading platform with auto-update capability
 
 
 # Release Notes
@@ -145,3 +142,7 @@ This project leverages a combination of technologies to run MT5 in a containeriz
  - Fixed bug where MT5 was not responding a mouse click after some seconds working.
 
  ### 2.1
+ - New console message styles.
+ - Image optimization: the Docker image no longer includes MT5. It will be downloaded on the first run and the latest version will be installed automatically.
+ - Reduced Docker image size.
+ - The `servers.dat` file (which contains the server URLs) will be downloaded from GitHub on the first run and kept up to date.

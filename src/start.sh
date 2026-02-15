@@ -80,15 +80,15 @@ DEPTH=24
 
 # Paths
 MT5_INSTALLER="/home/headless/mt5setup.exe"
-WINE_DRIVE_C="$HOME/.wine/drive_c"
-MT5_DIR="$WINE_DRIVE_C/Program Files/MetaTrader 5"
+MT5_DIR="/home/headless/.wine/drive_c/Program Files/MetaTrader 5"
+MT5_WIN_DIR="C:\Program Files\MetaTrader 5"
 MT5_EXE="$MT5_DIR/terminal64.exe"
 SERVERS_DAT="$MT5_DIR/Config/servers.dat"
 MIN_SIZE=1048576  # 1MB in bytes
 
 echo ""
 echo "  ╔══════════════════════════════════════════════╗"
-echo "  ║         MetaTrader 5 Docker Container        ║"
+echo "  ║ MT5 Docker - Run MetaTrader 5 in a Container ║"
 echo "  ╚══════════════════════════════════════════════╝"
 echo ""
 
@@ -149,7 +149,7 @@ step_done "noVNC started (port $NOVNC_PORT)"
 # ============================================================
 # Step 5: Initialize Wine
 # ============================================================
-step_start "Initializing Wine environment"
+step_start "Initializing Wine environment. It must take a while"
 
 # Fix ownership of .wine directory (volume mounts may create it as root)
 if [ -d "$HOME/.wine" ]; then
@@ -190,24 +190,40 @@ fi
 # ============================================================
 step_start "Applying configuration"
 
-# Copy mt5.ini if it exists
-if [ -f "/home/headless/mt5.ini" ]; then
-    mkdir -p "$MT5_DIR"
-    cp "/home/headless/mt5.ini" "$MT5_DIR/mt5.ini"
-fi
+
 
 sleep 1
 step_done "Configuration applied"
 
+
 # ============================================================
-# Step 8: Start MetaTrader 5
+# Step 8: Check servers.dat
+# ============================================================
+step_start "Checking servers.dat"
+if [ -f "$SERVERS_DAT" ]; then
+    FILE_SIZE=$(stat -c%s "$SERVERS_DAT" 2>/dev/null || echo 0)
+    if [ "$FILE_SIZE" -ge "$MIN_SIZE" ]; then
+        step_done "servers.dat OK ($(( FILE_SIZE / 1024 ))KB)"
+    else
+        download_servers_dat
+        step_done "servers.dat downloaded"
+    fi
+else
+    download_servers_dat
+    step_done "servers.dat downloaded"
+fi
+
+
+
+# ============================================================
+# Step 9: Start MetaTrader 5
 # ============================================================
 step_start "Starting MetaTrader 5"
 
 # Keep wineserver alive to prevent premature exit of Wine processes
 wineserver -p >>"$WINE_LOG" 2>&1 &
 
-wine "$MT5_EXE" >>"$WINE_LOG" 2>&1 &
+wine "$MT5_EXE" /config:"$MT5_WIN_DIR\mt5.ini" >>"$WINE_LOG" 2>&1 &
 MT5_PID=$!
 
 # Wait for MT5 process to appear
@@ -232,22 +248,7 @@ else
     step_fail "MetaTrader 5 failed to start (check $WINE_LOG)"
 fi
 
-# ============================================================
-# Step 9: Check servers.dat
-# ============================================================
-step_start "Checking servers.dat"
-if [ -f "$SERVERS_DAT" ]; then
-    FILE_SIZE=$(stat -c%s "$SERVERS_DAT" 2>/dev/null || echo 0)
-    if [ "$FILE_SIZE" -ge "$MIN_SIZE" ]; then
-        step_done "servers.dat OK ($(( FILE_SIZE / 1024 ))KB)"
-    else
-        download_servers_dat
-        step_done "servers.dat downloaded"
-    fi
-else
-    download_servers_dat
-    step_done "servers.dat downloaded"
-fi
+
 
 # ============================================================
 # Ready!

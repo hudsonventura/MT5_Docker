@@ -11,19 +11,21 @@ services:
       - "6901:6901" #noVNO (via browser: http://localhost:6901/vnc.html or http://localhost:6901/vnc.html?password=my_vnc_password)
 
     environment:
-     - VNC_PW=my_vnc_password #VNC password. Change it as you like
+
+      #VNC password. Change it as you like
+      - VNC_PW=my_vnc_password 
 
     volumes:
-      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/
+      # MQL5 folder (EAs, indicators, scripts, etc.)
+      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro
 
-    # Use a .ini file to connect with your broker automatically, see section `After Install`
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini
+      # Use a .ini file to connect with your broker automatically, see section `After Install`
+      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro
 
-    # Uncomment if you are using a non listed broker and you have a problema with it, see section `After Install`
-    #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
+      # Uncomment this if you have trouble with login in your broker. See section `After Install` to get more information
+      #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       
     # Optional parameters:
-    command: "/start.sh"       # This will start the VNC, noVNC, and MT5. If MT5 is closed, the container will shut down
     restart: always            # Automatically restarts the container if it stops
     mem_limit: 1024m           # Best practice. The container typically uses around 600MB
 
