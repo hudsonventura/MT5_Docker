@@ -219,3 +219,6 @@ I will install Openbox, VNC, noVNC and Wine from the Ubuntu base image.
  - Image optimization: the Docker image no longer includes MT5. It will be downloaded on the first run and the latest version will be installed automatically.
  - Reduced Docker image size.
  - The `servers.dat` file (which contains the server URLs) will be downloaded from GitHub on the first run and kept up to date.
+
+### 2.2
+ - Add MQL5 expert advisor compilation functionality and `docker-compose-mt5-compiler.yml` file to build the container with the MQL5 expert advisor compilation functionality.  
