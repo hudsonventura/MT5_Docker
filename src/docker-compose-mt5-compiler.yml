@@ -1,0 +1,16 @@
+services:
+
+  mt5-compiler:
+    image: hudsonventura/mt5:2.2
+    build:
+       context: ./
+       dockerfile: ./Dockerfile
+
+    container_name: mt5-compiler
+
+    volumes:
+      - ./mql5/Experts/:/home/headless/.wine/drive_c/MQL5/Experts/      #Expose the dir with your EAs files to compile it
+      - ./mql5/Include/:/home/headless/.wine/drive_c/MQL5/Include/:ro   #Expose the dir with your Include files be used to compile the EAs
+    command: /build.sh
+    restart: no                # does not start again
+

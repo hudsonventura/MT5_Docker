@@ -24,31 +24,22 @@ Or copy and paste the content below:
 services:
 
   mt5:
-    image: hudsonventura/mt5:2.1
-    build:
-       context: ./
-       dockerfile: ./Dockerfile
+    image: hudsonventura/mt5:2.2
 
     ports:
       - "5901:5901" #VNC
       - "6901:6901" #noVNO (via browser: http://localhost:6901/vnc.html or http://localhost:6901/vnc.html?password=my_vnc_password)
 
     environment:
-
-      #VNC password. Change it as you like
-      - VNC_PW=my_vnc_password 
-      - SCREEN_RESOLUTION=800x600
+      - VNC_PW=my_vnc_password      #VNC password. Change it as you like
+      - SCREEN_RESOLUTION=1024x768  #You can change as you want. Default is 1024x768
 
     volumes:
-      # MQL5 folder (EAs, indicators, scripts, etc.)
-      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro
-
-      # Use a .ini file to connect with your broker automatically, see section `After Install`
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro
-
+      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro  # MQL5 folder (EAs, indicators, scripts, etc.)
+      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro    # Use a .ini file to connect with your broker automatically, see section `After Install`
+      #- ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       # Uncomment this if you have trouble with login in your broker. See section `After Install` to get more information
-      #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
-      
+       
     # Optional parameters:
     restart: always            # Automatically restarts the container if it stops
     mem_limit: 1024m           # Best practice. The container typically uses around 600MB
@@ -126,6 +117,70 @@ Server=Test-MT5-Demo
 
 See on `srv/mt5.ini` another things you can use. 
 Whole docs in [https://www.metatrader5.com/en/terminal/help/start_advanced/start](https://www.metatrader5.com/en/terminal/help/start_advanced/start)  
+
+
+### Compile EAs (Expert Advisors)
+You can compile your MQL5 Expert Advisors without opening MetaTrader 5 manually. This is useful for CI/CD pipelines or quick builds.
+
+Create a file `docker-compose-mt5-compiler.yml` downloading the file from GitHub:
+``` bash
+wget https://raw.githubusercontent.com/hudsonventura/MT5_Docker/refs/heads/main/src/docker-compose-mt5-compiler.yml
+```
+
+Or copy and paste the content below:
+
+``` yaml
+services:
+
+  mt5-compiler:
+    image: hudsonventura/mt5:2.2
+    container_name: mt5-compiler
+
+    volumes:
+      - ./mql5/Experts/:/home/headless/.wine/drive_c/MQL5/Experts/      #Expose the dir with your EAs files to compile it
+      - ./mql5/Include/:/home/headless/.wine/drive_c/MQL5/Include/:ro   #Expose the dir with your Include files be used to compile the EAs
+    command: /build.sh
+    restart: no                # does not start again
+```
+
+Put your `.mq5` files in the `mql5/Experts/` folder and your include files in `mql5/Include/`. The folder structure should look like this:
+```
+.
+├── docker-compose-mt5-compiler.yml
+└── mql5/
+    ├── Experts/
+    │   └── MyExpert.mq5
+    └── Include/
+        └── MyLibrary.mqh
+```
+
+Then run:
+``` bash
+docker compose -f docker-compose-mt5-compiler.yml up
+```
+
+The container will automatically download and install MT5 (on the first run), compile all `.mq5` files in the `Experts/` folder, and exit. The compiled `.ex5` files will be available in the same `mql5/Experts/` folder.
+
+Example output:
+```
+  ╔══════════════════════════════════════════════╗
+  ║   MT5 Docker - MQL5 Experts Compile          ║
+  ╚══════════════════════════════════════════════╝
+
+ [1/8] ✔  Wine OK (wine-11.2 (Staging))
+ [2/8] ✔  VNC server started (port 5901)
+ [3/8] ✔  Desktop environment started
+ [4/8] ✔  noVNC started (port 6901)
+ [5/8] ✔  Wine environment initialized
+ [6/8] ✔  MT5 installer downloaded
+ [7/8] ✔  MetaTrader 5 installed
+ [7/8] ✔  MetaTrader 5 processes stopped
+ [8/8] ✔  MQL5 Experts compiled successfully
+
+  ╔══════════════════════════════════════════════╗
+  ║         ✔  Build Complete!                    ║
+  ╚══════════════════════════════════════════════╝
+```
 
 
 # Technology Stack

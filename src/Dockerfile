@@ -63,7 +63,10 @@ RUN dpkg --add-architecture i386 && \
 # Copy configuration files
 COPY index.html /opt/noVNC/index.html
 COPY start.sh /start.sh
-RUN chmod +x /start.sh && \
+COPY build.sh /build.sh
+
+# Make scripts executable and set ownership
+RUN chmod +x /start.sh /build.sh && \
     chown headless:headless /opt/noVNC/index.html
 
 USER headless

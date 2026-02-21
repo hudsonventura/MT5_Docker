@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # ============================================================
-# MT5 Docker - Startup Script
+# MT5 Docker - Build Script (Compile MQL5 Experts)
 # ============================================================
+# Downloads and installs MetaTrader 5 if not present,
+# then runs MetaEditor64.exe to compile MQL5 expert files.
 # All Wine/X11 noise is redirected to /tmp/wine.log
-# Only clean step-by-step progress is shown in console
 # ============================================================
 
 WINE_LOG="/tmp/wine.log"
@@ -12,11 +13,9 @@ WINE_LOG="/tmp/wine.log"
 
 # ============================================================
 # Step display functions with spinner
-# Each spinner frame ends with \n so Docker flushes it,
-# and uses ANSI cursor-up (\033[1A) to overwrite the previous frame.
 # ============================================================
 STEP_NUM=0
-TOTAL_STEPS=9
+TOTAL_STEPS=8
 SPINNER_PID=""
 
 spinner_start() {
@@ -63,32 +62,25 @@ step_fail() {
     printf "\033[1A\r [%d/%d] ✘  %-45s\n" "$STEP_NUM" "$TOTAL_STEPS" "$1"
 }
 
-# Function to download servers.dat
-download_servers_dat() {
-    mkdir -p "$MT5_DIR/Config"
-    wget -q "https://github.com/hudsonventura/MT5_Docker/raw/refs/heads/main/servers.dat" -O "$SERVERS_DAT" 2>>"$WINE_LOG"
-}
-
 # ============================================================
 # Configuration
 # ============================================================
 VNC_PORT=5901
 NOVNC_PORT=6901
 DISPLAY_NUM=1
-RESOLUTION=${SCREEN_RESOLUTION:-1024x768}
+RESOLUTION=800x600
 DEPTH=24
+export DISPLAY=:$DISPLAY_NUM
 
 # Paths
 MT5_INSTALLER="/home/headless/mt5setup.exe"
 MT5_DIR="/home/headless/.wine/drive_c/Program Files/MetaTrader 5"
-MT5_WIN_DIR="C:\Program Files\MetaTrader 5"
 MT5_EXE="$MT5_DIR/terminal64.exe"
-SERVERS_DAT="$MT5_DIR/Config/servers.dat"
-MIN_SIZE=1048576  # 1MB in bytes
+METAEDITOR_EXE="$MT5_DIR/MetaEditor64.exe"
 
 echo ""
 echo "  ╔══════════════════════════════════════════════╗"
-echo "  ║ MT5 Docker - Run MetaTrader 5 in a Container ║"
+echo "  ║   MT5 Docker - MQL5 Experts Compile          ║"
 echo "  ╚══════════════════════════════════════════════╝"
 echo ""
 
@@ -118,7 +110,6 @@ rm -rf /tmp/.X11-unix/X$DISPLAY_NUM
 rm -rf /tmp/.X$DISPLAY_NUM-lock
 
 vncserver :$DISPLAY_NUM -geometry $RESOLUTION -depth $DEPTH -rfbport $VNC_PORT -localhost no >>"$WINE_LOG" 2>&1
-export DISPLAY=:$DISPLAY_NUM
 
 # Wait for X server
 for i in {1..10}; do
@@ -147,9 +138,9 @@ sleep 1
 step_done "noVNC started (port $NOVNC_PORT)"
 
 # ============================================================
-# Step 5: Initialize Wine
+# Step 5: Initialize Wine environment
 # ============================================================
-step_start "Initializing Wine environment. This may take some time. Please be patient."
+step_start "Initializing Wine environment"
 
 # Fix ownership of .wine directory (volume mounts may create it as root)
 if [ -d "$HOME/.wine" ]; then
@@ -186,121 +177,64 @@ else
 fi
 
 # ============================================================
-# Step 7: Apply configuration
+# Step 7: Kill MetaTrader 5 and installer processes
 # ============================================================
-step_start "Applying configuration"
+step_start "Stopping MetaTrader 5 processes"
 
+# Kill terminal64.exe if running
+pkill -fi "terminal64" 2>/dev/null || true
+# Kill the installer if still running
+pkill -fi "mt5setup" 2>/dev/null || true
+# Kill any MetaEditor if running
+pkill -fi "metaeditor" 2>/dev/null || true
 
+# Wait for processes to die
+sleep 3
 
-sleep 1
-step_done "Configuration applied"
+# Force kill if still around
+pkill -9 -fi "terminal64" 2>/dev/null || true
+pkill -9 -fi "mt5setup" 2>/dev/null || true
+pkill -9 -fi "metaeditor" 2>/dev/null || true
 
+sleep 2
+step_done "MetaTrader 5 processes stopped"
 
 # ============================================================
-# Step 8: Check servers.dat
+# Step 8: Compile MQL5 Experts with MetaEditor64
 # ============================================================
-step_start "Checking servers.dat"
-if [ -f "$SERVERS_DAT" ]; then
-    FILE_SIZE=$(stat -c%s "$SERVERS_DAT" 2>/dev/null || echo 0)
-    if [ "$FILE_SIZE" -ge "$MIN_SIZE" ]; then
-        step_done "servers.dat OK ($(( FILE_SIZE / 1024 ))KB)"
-    else
-        download_servers_dat
-        step_done "servers.dat downloaded"
-    fi
-else
-    download_servers_dat
-    step_done "servers.dat downloaded"
+step_start "Compiling MQL5 Experts"
+
+if [ ! -f "$METAEDITOR_EXE" ]; then
+    step_fail "MetaEditor64.exe not found at $METAEDITOR_EXE"
+    exit 1
 fi
 
+wine 'C:/Program Files/MetaTrader 5/MetaEditor64.exe' /compile:'C:/MQL5/Experts/' /include:'C:/MQL5/' /log >>"$WINE_LOG" 2>&1
+COMPILE_EXIT=$?
 
-
-# ============================================================
-# Step 9: Start MetaTrader 5
-# ============================================================
-step_start "Starting MetaTrader 5"
-
-# Keep wineserver alive to prevent premature exit of Wine processes
-wineserver -p >>"$WINE_LOG" 2>&1 &
-
-wine "$MT5_EXE" /config:"$MT5_WIN_DIR\mt5.ini" >>"$WINE_LOG" 2>&1 &
-MT5_PID=$!
-
-# Wait for MT5 process to appear
-WAIT_TIMEOUT=120
-WAIT_COUNT=0
-MT5_STARTED=false
-while [ "$WAIT_COUNT" -lt "$WAIT_TIMEOUT" ]; do
-    if pgrep -f "terminal64.exe" > /dev/null 2>&1; then
-        MT5_STARTED=true
-        break
-    fi
-    if ! kill -0 $MT5_PID 2>/dev/null; then
-        break
-    fi
-    sleep 2
-    WAIT_COUNT=$((WAIT_COUNT + 2))
-done
-
-if [ "$MT5_STARTED" = true ]; then
-    step_done "MetaTrader 5 started"
+if [ $COMPILE_EXIT -eq 0 ]; then
+    step_done "MQL5 Experts compiled successfully"
 else
-    step_fail "MetaTrader 5 failed to start (check $WINE_LOG)"
+    step_fail "MQL5 compilation failed (exit code: $COMPILE_EXIT)"
 fi
 
-
-
 # ============================================================
-# Ready!
+# Done!
 # ============================================================
 echo ""
 echo "  ╔══════════════════════════════════════════════╗"
-echo "  ║              ✔  Ready!                       ║"
-echo "  ╠══════════════════════════════════════════════╣"
-echo "  ║  VNC:   localhost:$VNC_PORT                       ║"
-echo "  ║  Web:   http://localhost:$NOVNC_PORT/vnc.html       ║"
-echo "  ║  Pass:  ${VNC_PW:-password}                      ║"
+echo "  ║         ✔  Build Complete!                    ║"
 echo "  ╠══════════════════════════════════════════════╣"
 echo "  ║  Logs:  $WINE_LOG                        ║"
 echo "  ╚══════════════════════════════════════════════╝"
 echo ""
-echo "  Press Ctrl-C to stop the container."
-echo ""
 
-# ============================================================
-# Monitor MT5 process
-# ============================================================
-while true; do
-    MT5_RUNNING=false
+# Show compilation log if it exists
+if [ -f "$WINE_LOG" ]; then
+    echo "  Compilation log:"
+    echo "  ─────────────────────────────────────────────"
+    grep -i -E "(compil|error|warning|result)" "$WINE_LOG" 2>/dev/null | tail -20 | sed 's/^/  /'
+    echo ""
+fi
 
-    # Check if the wine launcher process is still alive
-    if kill -0 $MT5_PID 2>/dev/null; then
-        MT5_RUNNING=true
-    fi
-
-    # Check for terminal64.exe by name (case-insensitive)
-    if pgrep -fi "terminal64" > /dev/null 2>&1; then
-        MT5_RUNNING=true
-    fi
-
-    # Check if MT5 installer is running
-    if pgrep -fi "mt5setup" > /dev/null 2>&1; then
-        MT5_RUNNING=true
-    fi
-
-    # Check if any wine process is running (fallback)
-    if pgrep -x "wine" > /dev/null 2>&1 || pgrep -x "wine64" > /dev/null 2>&1 || pgrep -f "wine-preloader" > /dev/null 2>&1 || pgrep -f "wine64-preloader" > /dev/null 2>&1; then
-        MT5_RUNNING=true
-    fi
-
-    # If nothing is running, exit
-    if [ "$MT5_RUNNING" = false ]; then
-        break
-    fi
-
-    sleep 10
-done
-
-echo ""
-echo "  MetaTrader 5 has exited. Shutting down container."
-exit 0
+exit $COMPILE_EXIT

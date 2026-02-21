@@ -1,7 +1,7 @@
 services:
 
   mt5:
-    image: hudsonventura/mt5:2.1
+    image: hudsonventura/mt5:2.2
     build:
        context: ./
        dockerfile: ./Dockerfile
@@ -11,21 +11,15 @@ services:
       - "6901:6901" #noVNO (via browser: http://localhost:6901/vnc.html or http://localhost:6901/vnc.html?password=my_vnc_password)
 
     environment:
-
-      #VNC password. Change it as you like
-      - VNC_PW=my_vnc_password 
-      - SCREEN_RESOLUTION=800x600
+      - VNC_PW=my_vnc_password      #VNC password. Change it as you like
+      - SCREEN_RESOLUTION=1024x768  #You can change as you want. Default is 1024x768
 
     volumes:
-      # MQL5 folder (EAs, indicators, scripts, etc.)
-      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro
-
-      # Use a .ini file to connect with your broker automatically, see section `After Install`
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro
-
+      - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro  # MQL5 folder (EAs, indicators, scripts, etc.)
+      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro    # Use a .ini file to connect with your broker automatically, see section `After Install`
+      #- ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       # Uncomment this if you have trouble with login in your broker. See section `After Install` to get more information
-      #  - ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
-      
+       
     # Optional parameters:
     restart: always            # Automatically restarts the container if it stops
     mem_limit: 1024m           # Best practice. The container typically uses around 600MB
