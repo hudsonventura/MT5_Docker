@@ -82,6 +82,7 @@ DEPTH=24
 MT5_INSTALLER="/home/headless/mt5setup.exe"
 MT5_DIR="/home/headless/.wine/drive_c/Program Files/MetaTrader 5"
 MT5_WIN_DIR="C:\Program Files\MetaTrader 5"
+MT5_WIN_FILES_DIR="C:\Program Files\MetaTrader 5\MQL5\Files"
 MT5_EXE="$MT5_DIR/terminal64.exe"
 SERVERS_DAT="$MT5_DIR/Config/servers.dat"
 MIN_SIZE=1048576  # 1MB in bytes
@@ -223,7 +224,8 @@ step_start "Starting MetaTrader 5"
 # Keep wineserver alive to prevent premature exit of Wine processes
 wineserver -p >>"$WINE_LOG" 2>&1 &
 
-wine "$MT5_EXE" /config:"$MT5_WIN_DIR\mt5.ini" >>"$WINE_LOG" 2>&1 &
+wine "$MT5_EXE" /config:"$MT5_WIN_FILES_DIR\mt5.ini" >>"$WINE_LOG" 2>&1 & # wine "/home/headless/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe" /config:"C:\Program Files\MetaTrader 5/mt5.ini"
+
 MT5_PID=$!
 
 # Wait for MT5 process to appear

@@ -36,7 +36,6 @@ services:
 
     volumes:
       - ./.data/MQL5/:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/MQL5/:ro  # MQL5 folder (EAs, indicators, scripts, etc.)
-      - ./mt5.ini:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/mt5.ini:ro    # Use a .ini file to connect with your broker automatically, see section `After Install`
       #- ./.data/MQL5/servers.dat:/home/headless/.wine/drive_c/Program Files/MetaTrader 5/Config/servers.dat 
       # Uncomment this if you have trouble with login in your broker. See section `After Install` to get more information
        
@@ -105,7 +104,7 @@ In this case will have to the `volumes` on `docker-compose.yml` to persist your 
 
 
 ### .ini file
-Maybe you want to use .ini file to connect with your broker automatically.  
+Maybe you want to use .ini file to connect with your broker automatically.  If you want, create your ini file in `./data/MQL5/Files/mt5.ini`. Look at the mount point into `docker-compose.yml`.  
 So, see and example on `srv/mt5.ini`.  On the first three lines, you can set your login, pass and server string.  
 
 ```ini
@@ -222,3 +221,6 @@ I will install Openbox, VNC, noVNC and Wine from the Ubuntu base image.
 
 ### 2.2
  - Add MQL5 expert advisor compilation functionality and `docker-compose-mt5-compiler.yml` file to build the container with the MQL5 expert advisor compilation functionality.  
+
+### 2.3
+ - Relocate mt5.ini configuration to MQL5/Files and refresh example settings.
